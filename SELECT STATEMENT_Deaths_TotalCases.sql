@@ -58,8 +58,12 @@ GROUP BY date
 ORDER BY 1, 2
 
 
---Total pop vs total vaccination
-SELECT death.country, death.date, death.population, vac.new_vaccinations
+--Total pop vs vaccination
+SELECT death.country, death.date, death.population, vac.new_vaccinations,
+   --SUM(CAST(vac.new_vaccinations as int)) OVER (Partition by death.country) this did not work vac.new_vaccinations contains values like '1.39E+06' 
+   --(scientific notation stored as text/nvarchar). SQL Server can't convert that directly to int.
+   SUM(CAST(CAST(vac.new_vaccinations AS float) AS bigint)) 
+    OVER (PARTITION BY death.country)
 FROM SQL_PORTFOLIO_PROJECT..covidreport death
 JOIN SQL_PORTFOLIO_PROJECT..covidvaccination vac
     ON death.country = vac.country
@@ -67,4 +71,22 @@ JOIN SQL_PORTFOLIO_PROJECT..covidvaccination vac
 WHERE death.country is not null
 ORDER BY 2, 3
 
-   
+   --USE CTE
+With PopvsVac (Country, Date, Population, new_vaccinations)
+as
+(
+SELECT death.country, death.date, death.population, vac.new_vaccinations,
+   --SUM(CAST(vac.new_vaccinations as int)) OVER (Partition by death.country) this did not work vac.new_vaccinations contains values like '1.39E+06' 
+   --(scientific notation stored as text/nvarchar). SQL Server can't convert that directly to int.
+   SUM(CAST(CAST(vac.new_vaccinations AS float) AS bigint)) 
+    OVER (PARTITION BY death.country)
+FROM SQL_PORTFOLIO_PROJECT..covidreport death
+JOIN SQL_PORTFOLIO_PROJECT..covidvaccination vac
+    ON death.country = vac.country
+    AND death.date = vac.date
+WHERE death.country is not null
+--ORDER BY 2, 3
+)
+SELECT *
+FROM PopvsVac
+
