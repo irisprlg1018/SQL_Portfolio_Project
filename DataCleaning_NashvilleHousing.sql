@@ -27,15 +27,38 @@ SET SaleDateConverted = CONVERT(Date, SaleDate)
 
 -- Populate Property Address data
 
+SELECT *
+FROM DataCleaning..NashvilleHousing
+--WHERE PropertyAddress is NULL
+ORDER BY ParcelID
 
+--JOIN
+SELECT a.ParcelID, a.PropertyAddress, b.ParcelID, b.PropertyAddress, ISNULL(a.PropertyAddress, b.PropertyAddress)
+FROM DataCleaning.dbo.NashvilleHousing a
+JOIN DataCleaning.dbo.NashvilleHousing b
+	ON a.ParcelID = b.ParcelID
+	AND a.[UniqueID ]<> b.[UniqueID ]
+WHERE a.PropertyAddress is null
 
-
-
+UPDATE a
+SET PropertyAddress = ISNULL(a.PropertyAddress, b.PropertyAddress)
+FROM DataCleaning.dbo.NashvilleHousing a
+JOIN DataCleaning.dbo.NashvilleHousing b
+	ON a.ParcelID = b.ParcelID
+	AND a.[UniqueID ]<> b.[UniqueID ]
 
 --------------------------------------------------------------------------------------------------------------------------
 
 -- Breaking out Address into Individual Columns (Address, City, State)
 
+SELECT PropertyAddress
+FROM DataCleaning.dbo.NashvilleHousing
+--WHERE PropertyAddress is NULL
+--ORDER BY ParcelID
+
+SELECT
+SUBSTRING(PropertyAddress, 1, CHARINDEX(',', PropertyAddress)-1) as Address --eliminating the comma
+FROM DataCleaning.dbo.NashvilleHousing
 
 
 
